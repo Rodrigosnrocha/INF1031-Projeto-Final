@@ -13,9 +13,13 @@
 #### ~~Dicionario inimigo~~
 #### ~~Lista inimigos~~
 #### ~~Colisao inimigos~~
-#### Movimento player
+#### ~~Movimento player~~
 #### Tilesheets
 
 ## Sem dono
 #### Desenhar fases
+#### Implementar fases
 #### ~~Player coletar moeda~~
+#### Save em arquivo(com failsafe)
+#### Salvar pontuação mais alta
+#### Salvar fase
