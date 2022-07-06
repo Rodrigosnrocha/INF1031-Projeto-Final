@@ -20,6 +20,6 @@
 #### Desenhar fases
 #### Implementar fases
 #### ~~Player coletar moeda~~
-#### Save em arquivo(com failsafe)
-#### Salvar pontuação mais alta
+#### ~~Save em arquivo(com failsafe)~~
+#### ~~Salvar pontuação mais alta~~
 #### Salvar fase
