@@ -32,14 +32,11 @@ def distanceBetween(coord1,coord2):
     return sqrt((coord2[0]-coord1[0])**2 + (coord2[1]-coord1[1])**2)
 def generateSpeed(val1,val2):
     return [uniform(val1,val2),uniform(val1,val2)]
-def geraInimigos(n,w,h):
-    inimigos = []
-    while len(inimigos) < n:
-        random_x = randint(w,display.get_width()-w)
-        random_y = randint(h,display.get_height()-h)
-        dic = {"rect":pygame.Rect(random_x,random_y,w,h),"posList":[random_x,random_y],"speed":generateSpeed(-1,1)}
-        inimigos.append(dic)
-    return inimigos
+def geraInimigos(w,h):
+    random_x = randint(w,display.get_width()-w)
+    random_y = randint(h,display.get_height()-h)
+    inimigo = {"rect":pygame.Rect(random_x,random_y,w,h),"posList":[random_x,random_y],"speed":generateSpeed(-1,1)}
+    return inimigo
 
 
 width = 850
@@ -66,11 +63,14 @@ clock = pygame.time.Clock()
 n = 3
 enemy_width = 60
 enemy_height = 60
-inimigos = geraInimigos(n,enemy_width,enemy_height)
+inimigos = []
+while len(inimigos) < n:
+    inimigos.append(geraInimigos(enemy_width,enemy_height))
 
 vidas = 3
 player_w = 60
 player_h = 60
+player_speed = 0.5
 player = {"rect":pygame.Rect(50,50,player_w,player_h),"speed":0}
 
 
@@ -81,7 +81,17 @@ while True:
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
-            exit()    
+            exit()   
+    
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_RIGHT]:
+        player["rect"].x += player_speed * dt
+    if keys[pygame.K_LEFT]:
+        player["rect"].x += -1*player_speed * dt
+    if keys[pygame.K_DOWN]:
+        player["rect"].y += player_speed * dt
+    if keys[pygame.K_UP]:
+        player["rect"].y += -1*player_speed * dt
     
 
     coin_rect.x += coin_speed[0]/1.5 * dt
@@ -107,6 +117,7 @@ while True:
         if pygame.Rect.colliderect(player["rect"],i["rect"]):
             inimigos.pop(index)
             vidas += -1
+            inimigos.append(geraInimigos(enemy_width,enemy_height))
         index += 1
 
     if coin_rect.right >= display.get_width():
@@ -127,6 +138,7 @@ while True:
         count += 1
         coin_rect.x = randint(40,display.get_width()-90)
         coin_rect.y = randint(100,display.get_height()-90)
+        coin_speed = generateSpeed(-1,1)
     
     if vidas <= 0:
         pygame.quit()
@@ -137,8 +149,10 @@ while True:
         pygame.draw.rect(display,green,i["rect"])
     display.blit(img,(coin_rect.x,coin_rect.y))
     pygame.draw.rect(display,blue,player["rect"])
-    text = font.render("Score: "+str(count),True,green,(0,0,0))
-    display.blit(text,(0,0))
+    text_score = font.render("Score: "+str(count),True,green,(0,0,0))
+    display.blit(text_score,(0,0))
+    text_vidas = font.render("Vidas: "+str(vidas),True,green,(0,0,0))
+    display.blit(text_vidas,(200,0))
 
     pygame.display.update()
     

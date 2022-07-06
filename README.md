@@ -12,7 +12,8 @@
 #### ~~Dicionario player~~
 #### ~~Dicionario inimigo~~
 #### ~~Lista inimigos~~
-#### Colisao inimigos
+#### ~~Colisao inimigos~~
+#### Movimento player
 #### Tilesheets
 
 ## Sem dono
