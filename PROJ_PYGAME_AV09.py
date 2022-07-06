@@ -25,92 +25,120 @@ from random import randint, uniform
 
 from sys import exit
 
-pygame.display.set_caption('Grand Theft Coins')
-
-width = 850
-height = 567
-t = 0
-white = (255, 255, 255)
-green = (0, 255, 0)
-blue = (0, 0, 128)
-
-pressed = False
-
-posList = []
-speed = []
-count = 0
-
 pygame.init()
-
-display = pygame.display.set_mode((width,height))
+pygame.display.set_caption('Grand Theft Coins')
 
 def distanceBetween(coord1,coord2):
     return sqrt((coord2[0]-coord1[0])**2 + (coord2[1]-coord1[1])**2)
 def generateSpeed(val1,val2):
     return [uniform(val1,val2),uniform(val1,val2)]
-    
-font = pygame.font.Font('freesansbold.ttf', 32)
+def geraInimigos(n,w,h):
+    inimigos = []
+    while len(inimigos) < n:
+        random_x = randint(w,display.get_width()-w)
+        random_y = randint(h,display.get_height()-h)
+        dic = {"rect":pygame.Rect(random_x,random_y,w,h),"posList":[random_x,random_y],"speed":generateSpeed(-1,1)}
+        inimigos.append(dic)
+    return inimigos
 
+
+width = 850
+height = 567
+
+white = (255, 255, 255)
+green = (0, 255, 0)
+blue = (0, 0, 128)
+
+coin_rect = pygame.Rect(100,100,90,90)
+coin_speed = generateSpeed(-1,1)
+count = 0
+
+
+display = pygame.display.set_mode((width,height))
+
+
+font = pygame.font.Font('freesansbold.ttf', 32)
 img = pygame.image.load('coin_asset.png')
 img = pygame.transform.scale(img, (90, 90))
 bg = pygame.image.load('bg_asset.jpeg')
 clock = pygame.time.Clock()
 
+n = 3
+enemy_width = 60
+enemy_height = 60
+inimigos = geraInimigos(n,enemy_width,enemy_height)
+
+vidas = 3
+player_w = 60
+player_h = 60
+player = {"rect":pygame.Rect(50,50,player_w,player_h),"speed":0}
 
 
 while True:
     clock.tick(60)
     dt = clock.get_time()
-    mouse_coord = pygame.mouse.get_pos()
-    time = pygame.time.get_ticks()
     
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
             exit()    
     
-    if len(posList) == 0:
-        display.blit(img,(100,100))
-        posList.append(100)
-        posList.append(100)
-        speed = generateSpeed(-1,1)
 
-    posList[0] += speed[0]/1.45 * dt
-    posList[1] += speed[1]/1.45 * dt
+    coin_rect.x += coin_speed[0]/1.5 * dt
+    coin_rect.y += coin_speed[1]/1.5 * dt
 
-    if posList[0]+90 >= display.get_width():
-        speed[0] = speed[0] * -1
-        posList[0] = display.get_width()-90
-    elif posList[0] <= 0:
-        speed[0] = speed[0] * -1
-        posList[0] = 0
-    if posList[1]+90 >= display.get_height():
-        speed[1] = speed[1] * -1
-        posList[1] = display.get_height()-90
-    elif posList[1] <= 0:
-        speed[1] = speed[1] * -1
-        posList[1] = 0
+    rects_inimigos = []
+    index = 0
+    for i in inimigos:
+        i["rect"].x += i["speed"][0]/2 * dt
+        i["rect"].y += i["speed"][1]/2 * dt
+        if i["rect"].right >= display.get_width():
+            i["speed"][0] = i["speed"][0] * -1
+            i["rect"].right = display.get_width()
+        elif i["rect"].left <= 0:
+            i["speed"][0] = i["speed"][0] * -1
+            i["rect"].left = 0
+        if i["rect"].bottom >= display.get_height():
+            i["speed"][1] = i["speed"][1] * -1
+            i["rect"].bottom = display.get_height()
+        elif i["rect"].top <= 0:
+            i["speed"][1] = i["speed"][1] * -1
+            i["rect"].top = 0
+        if pygame.Rect.colliderect(player["rect"],i["rect"]):
+            inimigos.pop(index)
+            vidas += -1
+        index += 1
+
+    if coin_rect.right >= display.get_width():
+        coin_speed[0] = coin_speed[0] * -1
+        coin_rect.right = display.get_width()
+    elif coin_rect.left <= 0:
+        coin_speed[0] = coin_speed[0] * -1
+        coin_rect.left = 0
+    if coin_rect.bottom >= display.get_height():
+        coin_speed[1] = coin_speed[1] * -1
+        coin_rect.bottom = display.get_height()
+    elif coin_rect.top <= 0:
+        coin_speed[1] = coin_speed[1] * -1
+        coin_rect.top = 0
     
-
-    if distanceBetween(mouse_coord,(posList[0]+45,posList[1]+45)) <=45 and (not pressed):
-        if True in pygame.mouse.get_pressed():
-            random_x = randint(40,display.get_width()-90)
-            random_y = randint(100,display.get_height()-90)
-
-            posList = [random_x,random_y]
-            speed = generateSpeed(-1,1)
-            display.blit(bg,(0,0))
-            display.blit(img,(posList[0],posList[1]))
-            count += 1
-            pressed = True
-    if not(True in pygame.mouse.get_pressed()):
-        pressed = False
-
     
+    if pygame.Rect.colliderect(player["rect"],coin_rect):
+        count += 1
+        coin_rect.x = randint(40,display.get_width()-90)
+        coin_rect.y = randint(100,display.get_height()-90)
+    
+    if vidas <= 0:
+        pygame.quit()
+        exit()
+
     display.blit(bg,(0,0))
+    for i in inimigos:
+        pygame.draw.rect(display,green,i["rect"])
+    display.blit(img,(coin_rect.x,coin_rect.y))
+    pygame.draw.rect(display,blue,player["rect"])
     text = font.render("Score: "+str(count),True,green,(0,0,0))
     display.blit(text,(0,0))
-    display.blit(img,(posList[0],posList[1]))
 
     pygame.display.update()
     
