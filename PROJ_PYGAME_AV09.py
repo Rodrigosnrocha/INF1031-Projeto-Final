@@ -29,7 +29,7 @@ pygame.display.set_caption('Grand Theft Coins')
 
 width = 850
 height = 567
-
+t = 0
 white = (255, 255, 255)
 green = (0, 255, 0)
 blue = (0, 0, 128)
