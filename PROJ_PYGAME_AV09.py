@@ -111,13 +111,18 @@ coin_pickup = pygame.mixer.Sound('snd_coin.wav')
 bg = pygame.image.load('bg_01.jpeg')
 clock = pygame.time.Clock()
 
-vidas = 3
-player_w = 60
-player_h = 60
-player_speed = 0.5
-player = {"rect":pygame.Rect(50,50,player_w,player_h),"speed":0}
 
-n = 3
+vidas = 3
+player_w = 128
+player_h = 64
+player_speed = 0.5
+hand_anim = []
+for i in range(8):
+    sprite = pygame.image.load('sprites/tile00'+str(i)+'.png')
+    hand_anim.append(pygame.transform.scale(sprite, (player_w, player_h)))
+player = {"rect":pygame.Rect(50,50,player_w,player_h),"speed":0,"anim":hand_anim,"frame":0}
+
+n = 2
 enemy_width = 60
 enemy_height = 60
 
@@ -126,7 +131,6 @@ while len(inimigos) < n:
     i = geraInimigos(enemy_width,enemy_height)
     if distanceBetween((i["rect"].x,i["rect"].y),(player["rect"].x,player["rect"].y)) > 100:
         inimigos.append(i)
-# Precisa adicionar um check se o inimigo nasce muito perto do player
 
 while True:
     clock.tick(60)
@@ -181,7 +185,7 @@ while True:
             i["rect"].top = 0
         if pygame.Rect.colliderect(player["rect"],i["rect"]):
             inimigos.remove(i)
-            vidas += -1
+            #vidas += -1
             while len(inimigos) < n:
                 j = geraInimigos(enemy_width,enemy_height)
                 if distanceBetween((j["rect"].x,j["rect"].y),(player["rect"].x,player["rect"].y)) > 100:
@@ -202,12 +206,15 @@ while True:
     
     # Verifica colisão entre Player e Moeda, e aumenta a pontuação se sim
     if pygame.Rect.colliderect(player["rect"],coin_rect):
+        valid = False
         coin_pickup.play()
         count += 1
-        coin_rect.x = randint(40,display.get_width()-90)
-        coin_rect.y = randint(100,display.get_height()-90)
-        coin_speed = generateSpeed(-1,1)
-    
+        while not valid:
+            coin_rect.x = randint(40,display.get_width()-90)
+            coin_rect.y = randint(100,display.get_height()-90)
+            coin_speed = generateSpeed(-1,1)
+            if distanceBetween((coin_rect.x,coin_rect.y),(player["rect"].x,player["rect"].y)) > 300:
+                valid = True
     if vidas <= 0:
         if count > high_score:
             high_score = count
@@ -215,19 +222,26 @@ while True:
             save.write(str(high_score)+"\n"+str(fase))
         pygame.quit()
         exit()
+    
+    player["frame"] += 0.5
+    if player["frame"] >= len(player["anim"]):
+            player["frame"] = 0
+    frame = int(player["frame"])
 
     display.blit(bg,(0,0))
     for i in inimigos:
         pygame.draw.rect(display,green,i["rect"])
     display.blit(img,(coin_rect.x,coin_rect.y))
-    pygame.draw.rect(display,blue,player["rect"])
+    #pygame.draw.rect(display,blue,player["rect"])
+    display.blit(player["anim"][frame],(player["rect"][0],player["rect"][1]))
     text_score = font.render("Score: "+str(count),True,green,(0,0,0))
     display.blit(text_score,(0,0))
     text_vidas = font.render("Vidas: "+str(vidas),True,green,(0,0,0))
     display.blit(text_vidas,(200,0))
-    sprites.draw(display)
-    hand.animate()
-    sprites.update()
+    #hand.rect = player["rect"]
+    #sprites.draw(display)
+    #hand.animate()
+    #sprites.update()
     pygame.display.update()
     
 
