@@ -9,7 +9,7 @@
 ## Antonio
 #### Efeitos sonoros
 #### Sprites inimigos
-#### Sprites player
+#### Sprites player - OBS! PARCIALMENTE FEITO! Não estou conseguindo atualizar a posição.
 
 
 ## Rodrigo
