@@ -51,6 +51,7 @@ try:
         save_values = save.readlines()
         high_score = int(save_values[0])
         fase = int(save_values[1])
+        
 except FileNotFoundError:
     high_score = 0
     fase = 0
@@ -87,7 +88,6 @@ while len(inimigos) < n:
     i = geraInimigos(enemy_width,enemy_height)
     if distanceBetween((i["rect"].x,i["rect"].y),(player["rect"].x,player["rect"].y)) > 100:
         inimigos.append(i)
-# Precisa adicionar um check se o inimigo nasce muito perto do player
 
 
 while True:
@@ -187,9 +187,3 @@ while True:
     display.blit(text_vidas,(200,0))
 
     pygame.display.update()
-    
-
-    
-
-        
-        
