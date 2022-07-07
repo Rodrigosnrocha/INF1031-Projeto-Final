@@ -28,10 +28,50 @@ pygame.init()
 pygame.mixer.init()
 pygame.display.set_caption('Grand Theft Coins')
 
+
+class Hand(pygame.sprite.Sprite):
+    def __init__(self,mouse_pos):
+        pygame.sprite.Sprite.__init__(self)
+        self.sprites = []
+        self.sprites.append(pygame.image.load('sprites/tile000.png'))
+        self.sprites.append(pygame.image.load('sprites/tile001.png'))
+        self.sprites.append(pygame.image.load('sprites/tile002.png'))
+        self.sprites.append(pygame.image.load('sprites/tile003.png'))
+        self.sprites.append(pygame.image.load('sprites/tile004.png'))
+        self.sprites.append(pygame.image.load('sprites/tile005.png'))
+        self.sprites.append(pygame.image.load('sprites/tile006.png'))
+        self.sprites.append(pygame.image.load('sprites/tile007.png'))
+        self.atual = 0
+        self.image = self.sprites[self.atual]
+        self.image = pygame.transform.scale(self.image, (128, 64))
+        self.rect = self.image.get_rect()
+        self.rect.topleft = mouse_pos
+        self.animar = False
+
+    def animate(self):
+        self.animar = True
+
+    def update(self):
+        if self.animar == True:
+            self.atual = self.atual + 0.5
+            if self.atual >= len(self.sprites):
+                self.atual = 0
+                self.animar = False
+            self.image = self.sprites[int(self.atual)]
+            self.image = pygame.transform.scale(self.image, (128, 64))
+
+hand = Hand(pygame.mouse.get_pos())
+
+sprites = pygame.sprite.Group()
+sprites.add(hand)
+
 def distanceBetween(coord1,coord2):
     return sqrt((coord2[0]-coord1[0])**2 + (coord2[1]-coord1[1])**2)
+
+
 def generateSpeed(val1,val2):
     return [uniform(val1,val2),uniform(val1,val2)]
+
 def geraInimigos(w,h):
     random_x = randint(w,display.get_width()-w)
     random_y = randint(h,display.get_height()-h)
@@ -51,7 +91,6 @@ try:
         save_values = save.readlines()
         high_score = int(save_values[0])
         fase = int(save_values[1])
-        
 except FileNotFoundError:
     high_score = 0
     fase = 0
@@ -72,7 +111,6 @@ coin_pickup = pygame.mixer.Sound('snd_coin.wav')
 bg = pygame.image.load('bg_01.jpeg')
 clock = pygame.time.Clock()
 
-
 vidas = 3
 player_w = 60
 player_h = 60
@@ -88,11 +126,12 @@ while len(inimigos) < n:
     i = geraInimigos(enemy_width,enemy_height)
     if distanceBetween((i["rect"].x,i["rect"].y),(player["rect"].x,player["rect"].y)) > 100:
         inimigos.append(i)
-
+# Precisa adicionar um check se o inimigo nasce muito perto do player
 
 while True:
     clock.tick(60)
     dt = clock.get_time()
+    
     
     for event in pygame.event.get():
         if event.type == QUIT:
@@ -117,6 +156,7 @@ while True:
         player["rect"].bottom = display.get_height()
     elif player["rect"].top <= 0:
         player["rect"].top = 0
+
 
     coin_rect.x += coin_speed[0]/1.5 * dt
     coin_rect.y += coin_speed[1]/1.5 * dt
@@ -185,5 +225,12 @@ while True:
     display.blit(text_score,(0,0))
     text_vidas = font.render("Vidas: "+str(vidas),True,green,(0,0,0))
     display.blit(text_vidas,(200,0))
-
+    sprites.draw(display)
+    hand.animate()
+    sprites.update()
     pygame.display.update()
+    
+
+    
+
+        
