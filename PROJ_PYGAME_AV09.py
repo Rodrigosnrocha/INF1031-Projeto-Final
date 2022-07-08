@@ -51,9 +51,9 @@ def testLevel(coord):
             matrix[i].append(randint(0,9))
     return matrix
 
-def generateQuads(x,y):
+def generateQuads(x,y,levels):
     tile_groups = []
-    for h in range(3):
+    for h in range(levels):
         tile_quads = []
         for i in range(x):
             for j in range(y): 
@@ -77,6 +77,7 @@ def loadMap(lines,n):
 tile_size = 64
 group_size = tile_size * 4
 level = 0
+last_level = 0
 screen_tiles = [15,10]
 width = tile_size * screen_tiles[0]
 height = tile_size * screen_tiles[1]
@@ -98,7 +99,7 @@ tilesheet = pygame.image.load("tilesheet.png")
 tile_pattern = ["0","1","2","3","4","5","6","7","8","9","A","B"]
 
 levels = loadMap(screen_tiles[1],4)
-tile_groups = generateQuads(3,4)
+tile_groups = generateQuads(3,4,len(levels))
 
 coin_rect = pygame.Rect(100,100,90,90)
 coin_speed = generateSpeed(-1,1)
@@ -109,7 +110,7 @@ img = pygame.image.load('coin_asset.png')
 img = pygame.transform.scale(img, (90, 90))
 coin_pickup = pygame.mixer.Sound('snd_coin.wav')
 hurt = pygame.mixer.Sound('hurt.wav')
-bg = pygame.image.load('bg_01.jpeg')
+explosion = pygame.mixer.Sound('explosion.wav')
 clock = pygame.time.Clock()
 
 
@@ -195,7 +196,7 @@ while True:
         if pygame.Rect.colliderect(player["rect"],i["rect"]):
             inimigos.remove(i)
             hurt.play()
-            #vidas += -1
+            vidas += -1
     while len(inimigos) < level+1:
         j = geraInimigos(enemy_width,enemy_height)
         if distanceBetween((j["rect"].x,j["rect"].y),(player["rect"].x,player["rect"].y)) > 300:
@@ -245,8 +246,10 @@ while True:
     level = count//10
     if level >= 4:
         level = 3
+    if last_level != level:
+        explosion.play()
+    last_level = level
 
-    #display.blit(bg,(0,0))
     for i in range(screen_tiles[1]):
         for j in range(screen_tiles[0]):
             tile_name = levels[level][i][j]
@@ -265,4 +268,6 @@ while True:
     display.blit(text_vidas,(200,0))
     text_hs = font.render("High Score: "+str(high_score),True,green,(0,0,0))
     display.blit(text_hs,(600,0))
+    text_level = font.render("Level: "+str(level+1),True,green,(0,0,0))
+    display.blit(text_level,(400,0))
     pygame.display.update()
