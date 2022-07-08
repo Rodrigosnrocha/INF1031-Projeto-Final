@@ -61,15 +61,18 @@ def generateQuads(x,y):
         tile_groups.append(tile_quads)
     return tile_groups
 
-def loadMap(lines):
-    with open("level1.txt","r") as level1:
-        text_matrix = level1.readlines()
-        level_matrix = []
-        for i in range(lines):
-            level_matrix.append([])
-            for j in text_matrix[i]:
-                level_matrix[i].append(j)
-    return level_matrix
+def loadMap(lines,n):
+    levels = []
+    for h in range(n):
+        with open("level"+str(h+1)+".txt","r") as level1:
+            text_matrix = level1.readlines()
+            level_matrix = []
+            for i in range(lines):
+                level_matrix.append([])
+                for j in text_matrix[i]:
+                    level_matrix[i].append(j)
+            levels.append(level_matrix)
+    return levels
 
 tile_size = 64
 group_size = tile_size * 4
@@ -94,7 +97,7 @@ display = pygame.display.set_mode((width,height))
 tilesheet = pygame.image.load("tilesheet.png")
 tile_pattern = ["0","1","2","3","4","5","6","7","8","9","A","B"]
 
-level_matrix = loadMap(screen_tiles[1])
+levels = loadMap(screen_tiles[1],4)
 tile_groups = generateQuads(3,4)
 
 coin_rect = pygame.Rect(100,100,90,90)
@@ -239,15 +242,14 @@ while True:
     if facing_right:
         frame = pygame.transform.flip(frame,True,False)
 
-    if count >= 30:
-        level = 2
-    elif count >= 20:
-        level = 1
+    level = count//10
+    if level >= 4:
+        level = 3
 
     #display.blit(bg,(0,0))
     for i in range(screen_tiles[1]):
         for j in range(screen_tiles[0]):
-            tile_name = level_matrix[i][j]
+            tile_name = levels[level][i][j]
             if tile_name in tile_pattern:
                 tile = tile_pattern.index(tile_name)
                 display.blit(tilesheet,((j* tile_size),(i* tile_size)),tile_groups[level][tile])
