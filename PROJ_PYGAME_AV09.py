@@ -29,42 +29,6 @@ pygame.mixer.init()
 pygame.display.set_caption('Grand Theft Coins')
 
 
-class Hand(pygame.sprite.Sprite):
-    def __init__(self,mouse_pos):
-        pygame.sprite.Sprite.__init__(self)
-        self.sprites = []
-        self.sprites.append(pygame.image.load('sprites/tile000.png'))
-        self.sprites.append(pygame.image.load('sprites/tile001.png'))
-        self.sprites.append(pygame.image.load('sprites/tile002.png'))
-        self.sprites.append(pygame.image.load('sprites/tile003.png'))
-        self.sprites.append(pygame.image.load('sprites/tile004.png'))
-        self.sprites.append(pygame.image.load('sprites/tile005.png'))
-        self.sprites.append(pygame.image.load('sprites/tile006.png'))
-        self.sprites.append(pygame.image.load('sprites/tile007.png'))
-        self.atual = 0
-        self.image = self.sprites[self.atual]
-        self.image = pygame.transform.scale(self.image, (128, 64))
-        self.rect = self.image.get_rect()
-        self.rect.topleft = mouse_pos
-        self.animar = False
-
-    def animate(self):
-        self.animar = True
-
-    def update(self):
-        if self.animar == True:
-            self.atual = self.atual + 0.5
-            if self.atual >= len(self.sprites):
-                self.atual = 0
-                self.animar = False
-            self.image = self.sprites[int(self.atual)]
-            self.image = pygame.transform.scale(self.image, (128, 64))
-
-hand = Hand(pygame.mouse.get_pos())
-
-sprites = pygame.sprite.Group()
-sprites.add(hand)
-
 def distanceBetween(coord1,coord2):
     return sqrt((coord2[0]-coord1[0])**2 + (coord2[1]-coord1[1])**2)
 
@@ -85,15 +49,14 @@ height = 567
 white = (255, 255, 255)
 green = (0, 255, 0)
 blue = (0, 0, 128)
+skull = pygame.image.load('skull.png')
 
 try:
     with open("save.txt","r") as save:
         save_values = save.readlines()
         high_score = int(save_values[0])
-        fase = int(save_values[1])
 except FileNotFoundError:
     high_score = 0
-    fase = 0
 
 
 coin_rect = pygame.Rect(100,100,90,90)
@@ -108,6 +71,7 @@ font = pygame.font.Font('freesansbold.ttf', 32)
 img = pygame.image.load('coin_asset.png')
 img = pygame.transform.scale(img, (90, 90))
 coin_pickup = pygame.mixer.Sound('snd_coin.wav')
+hurt = pygame.mixer.Sound('hurt.wav')
 bg = pygame.image.load('bg_01.jpeg')
 clock = pygame.time.Clock()
 
@@ -116,6 +80,7 @@ vidas = 3
 player_w = 128
 player_h = 64
 player_speed = 0.5
+facing_right = False
 hand_anim = []
 for i in range(8):
     sprite = pygame.image.load('sprites/tile00'+str(i)+'.png')
@@ -123,8 +88,9 @@ for i in range(8):
 player = {"rect":pygame.Rect(50,50,player_w,player_h),"speed":0,"anim":hand_anim,"frame":0}
 
 n = 2
-enemy_width = 60
-enemy_height = 60
+enemy_width = 82
+enemy_height = 144
+skull = pygame.transform.scale(skull,(enemy_width+20,enemy_height-40))
 
 inimigos = []
 while len(inimigos) < n:
@@ -143,13 +109,15 @@ while True:
             exit()   
     
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_RIGHT]:
+    if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
         player["rect"].x += player_speed * dt
-    if keys[pygame.K_LEFT]:
+        facing_right = True
+    if keys[pygame.K_LEFT] or keys[pygame.K_a]:
         player["rect"].x += -1*player_speed * dt
-    if keys[pygame.K_DOWN]:
+        facing_right = False
+    if keys[pygame.K_DOWN] or keys[pygame.K_s]:
         player["rect"].y += player_speed * dt
-    if keys[pygame.K_UP]:
+    if keys[pygame.K_UP] or keys[pygame.K_w]:
         player["rect"].y += -1*player_speed * dt
     
     if player["rect"].right >= display.get_width():
@@ -185,11 +153,13 @@ while True:
             i["rect"].top = 0
         if pygame.Rect.colliderect(player["rect"],i["rect"]):
             inimigos.remove(i)
+            hurt.play()
             #vidas += -1
             while len(inimigos) < n:
                 j = geraInimigos(enemy_width,enemy_height)
                 if distanceBetween((j["rect"].x,j["rect"].y),(player["rect"].x,player["rect"].y)) > 100:
                     inimigos.append(j)
+                
 
     if coin_rect.right >= display.get_width():
         coin_speed[0] = coin_speed[0] * -1
@@ -219,32 +189,29 @@ while True:
         if count > high_score:
             high_score = count
         with open("save.txt","w") as save:
-            save.write(str(high_score)+"\n"+str(fase))
+            save.write(str(high_score))
         pygame.quit()
         exit()
     
     player["frame"] += 0.5
     if player["frame"] >= len(player["anim"]):
             player["frame"] = 0
-    frame = int(player["frame"])
+    
+    frame = player["anim"][int(player["frame"])]
+    if facing_right:
+        frame = pygame.transform.flip(frame,True,False)
+
 
     display.blit(bg,(0,0))
     for i in inimigos:
-        pygame.draw.rect(display,green,i["rect"])
+        #pygame.draw.rect(display,green,i["rect"])
+        display.blit(skull,(i["rect"].x,i["rect"].y))
     display.blit(img,(coin_rect.x,coin_rect.y))
-    #pygame.draw.rect(display,blue,player["rect"])
-    display.blit(player["anim"][frame],(player["rect"][0],player["rect"][1]))
+    display.blit(frame,(player["rect"].x,player["rect"].y))
     text_score = font.render("Score: "+str(count),True,green,(0,0,0))
     display.blit(text_score,(0,0))
     text_vidas = font.render("Vidas: "+str(vidas),True,green,(0,0,0))
     display.blit(text_vidas,(200,0))
-    #hand.rect = player["rect"]
-    #sprites.draw(display)
-    #hand.animate()
-    #sprites.update()
+    text_hs = font.render("High Score: "+str(high_score),True,green,(0,0,0))
+    display.blit(text_hs,(600,0))
     pygame.display.update()
-    
-
-    
-
-        
