@@ -41,10 +41,42 @@ def geraInimigos(w,h):
     random_y = randint(h,display.get_height()-h)
     inimigo = {"rect":pygame.Rect(random_x,random_y,w,h),"posList":[random_x,random_y],"speed":generateSpeed(-1,1)}
     return inimigo
+    
+def testLevel(coord):
+    x,y = coord[0],coord[1]
+    matrix = []
+    for i in range(x):
+        matrix.append([])
+        for j in range(y):
+            matrix[i].append(randint(0,9))
+    return matrix
 
+def generateQuads(x,y):
+    tile_groups = []
+    for h in range(3):
+        tile_quads = []
+        for i in range(x):
+            for j in range(y): 
+                tile_quads.append((i * tile_size , j * tile_size + h*group_size, tile_size, tile_size))
+        tile_groups.append(tile_quads)
+    return tile_groups
 
-width = 850
-height = 567
+def loadMap(lines):
+    with open("level1.txt","r") as level1:
+        text_matrix = level1.readlines()
+        level_matrix = []
+        for i in range(lines):
+            level_matrix.append([])
+            for j in text_matrix[i]:
+                level_matrix[i].append(j)
+    return level_matrix
+
+tile_size = 64
+group_size = tile_size * 4
+level = 0
+screen_tiles = [15,10]
+width = tile_size * screen_tiles[0]
+height = tile_size * screen_tiles[1]
 
 white = (255, 255, 255)
 green = (0, 255, 0)
@@ -58,14 +90,16 @@ try:
 except FileNotFoundError:
     high_score = 0
 
+display = pygame.display.set_mode((width,height))
+tilesheet = pygame.image.load("tilesheet.png")
+tile_pattern = ["0","1","2","3","4","5","6","7","8","9","A","B"]
+
+level_matrix = loadMap(screen_tiles[1])
+tile_groups = generateQuads(3,4)
 
 coin_rect = pygame.Rect(100,100,90,90)
 coin_speed = generateSpeed(-1,1)
 count = 0
-
-
-display = pygame.display.set_mode((width,height))
-
 
 font = pygame.font.Font('freesansbold.ttf', 32)
 img = pygame.image.load('coin_asset.png')
@@ -87,15 +121,15 @@ for i in range(8):
     hand_anim.append(pygame.transform.scale(sprite, (player_w, player_h)))
 player = {"rect":pygame.Rect(50,50,player_w,player_h),"speed":0,"anim":hand_anim,"frame":0}
 
-n = 2
-enemy_width = 82
-enemy_height = 144
-skull = pygame.transform.scale(skull,(enemy_width+20,enemy_height-40))
+
+enemy_width = 62
+enemy_height = 74
+skull = pygame.transform.scale(skull,(enemy_width+20,enemy_height+40))
 
 inimigos = []
-while len(inimigos) < n:
+while len(inimigos) < level+1:
     i = geraInimigos(enemy_width,enemy_height)
-    if distanceBetween((i["rect"].x,i["rect"].y),(player["rect"].x,player["rect"].y)) > 100:
+    if distanceBetween((i["rect"].x,i["rect"].y),(player["rect"].x,player["rect"].y)) > 300:
         inimigos.append(i)
 
 while True:
@@ -105,6 +139,10 @@ while True:
     
     for event in pygame.event.get():
         if event.type == QUIT:
+            if count > high_score:
+                high_score = count
+            with open("save.txt","w") as save:
+                save.write(str(high_score))
             pygame.quit()
             exit()   
     
@@ -155,10 +193,10 @@ while True:
             inimigos.remove(i)
             hurt.play()
             #vidas += -1
-            while len(inimigos) < n:
-                j = geraInimigos(enemy_width,enemy_height)
-                if distanceBetween((j["rect"].x,j["rect"].y),(player["rect"].x,player["rect"].y)) > 100:
-                    inimigos.append(j)
+    while len(inimigos) < level+1:
+        j = geraInimigos(enemy_width,enemy_height)
+        if distanceBetween((j["rect"].x,j["rect"].y),(player["rect"].x,player["rect"].y)) > 300:
+            inimigos.append(j)
                 
 
     if coin_rect.right >= display.get_width():
@@ -193,7 +231,7 @@ while True:
         pygame.quit()
         exit()
     
-    player["frame"] += 0.5
+    player["frame"] += 0.25
     if player["frame"] >= len(player["anim"]):
             player["frame"] = 0
     
@@ -201,10 +239,21 @@ while True:
     if facing_right:
         frame = pygame.transform.flip(frame,True,False)
 
+    if count >= 30:
+        level = 2
+    elif count >= 20:
+        level = 1
 
-    display.blit(bg,(0,0))
+    #display.blit(bg,(0,0))
+    for i in range(screen_tiles[1]):
+        for j in range(screen_tiles[0]):
+            tile_name = level_matrix[i][j]
+            if tile_name in tile_pattern:
+                tile = tile_pattern.index(tile_name)
+                display.blit(tilesheet,((j* tile_size),(i* tile_size)),tile_groups[level][tile])
+
+
     for i in inimigos:
-        #pygame.draw.rect(display,green,i["rect"])
         display.blit(skull,(i["rect"].x,i["rect"].y))
     display.blit(img,(coin_rect.x,coin_rect.y))
     display.blit(frame,(player["rect"].x,player["rect"].y))
